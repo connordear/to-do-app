@@ -14,14 +14,10 @@ class TaskListViewController: UIViewController, UITableViewDelegate, UITableView
     @IBOutlet weak var tableView: UITableView!
     
     var taskList : [Task] = []
-    var selectedRow = 0;
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        
-        taskList = buildTaskList()
-        
         tableView.delegate = self
         tableView.dataSource = self
     }
@@ -30,11 +26,16 @@ class TaskListViewController: UIViewController, UITableViewDelegate, UITableView
         return taskList.count
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        getTasks()
+        tableView.reloadData()
+    }
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
         let task = taskList[indexPath.row]
         if task.important {
-            cell.textLabel?.text = "‼️\(task.name)"
+            cell.textLabel!.text = "‼️" + task.name!
         } else {
             cell.textLabel?.text = task.name
         }
@@ -42,32 +43,24 @@ class TaskListViewController: UIViewController, UITableViewDelegate, UITableView
     }
     
     func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
-        selectedRow = indexPath.row
-        let task = taskList[selectedRow]
+        let task = taskList[indexPath.row]
         performSegue(withIdentifier: "completeTaskSegue", sender: task)
         
     }
 
-    func buildTaskList() -> [Task] {
-        let task1 = Task()
-        task1.name = "Go grocery Shopping"
-        task1.important = true
-        
-        let task2 = Task()
-        task2.name = "Hold David's Hand"
-        task2.important = true
-        
-        let task3 = Task()
-        task3.name = "Finish swift tutorial"
-        task3.important = false
-        
-        let tasks = [task1, task2, task3]
-        
-        return tasks
-    }
     @IBAction func addTapped(_ sender: Any) {
         
         performSegue(withIdentifier: "addSegue", sender: nil)
+    }
+    
+    func getTasks() {
+        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        do {
+            taskList = try context.fetch(Task.fetchRequest()) as! [Task]
+            print(taskList)
+        } catch {
+            print("Fetch request failed")
+        }
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -78,7 +71,6 @@ class TaskListViewController: UIViewController, UITableViewDelegate, UITableView
         }
         if segue.identifier == "completeTaskSegue" {
             let nextVC = segue.destination as! CompleteTaskViewController
-            nextVC.previousVC = self
             nextVC.task = sender as! Task
         }
     }
