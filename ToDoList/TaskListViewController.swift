@@ -1,5 +1,6 @@
 //
-//  ViewController.swift
+//  TaskListViewController.swift
+
 //  ToDoList
 //
 //  Created by Connor Dear on 2017-04-18.
@@ -8,11 +9,12 @@
 
 import UIKit
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class TaskListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
 
     @IBOutlet weak var tableView: UITableView!
     
     var taskList : [Task] = []
+    var selectedRow = 0;
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,6 +29,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return taskList.count
     }
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
         let task = taskList[indexPath.row]
@@ -36,6 +39,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             cell.textLabel?.text = task.name
         }
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+        selectedRow = indexPath.row
+        let task = taskList[selectedRow]
+        performSegue(withIdentifier: "completeTaskSegue", sender: task)
+        
     }
 
     func buildTaskList() -> [Task] {
@@ -55,5 +65,21 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         return tasks
     }
-
+    @IBAction func addTapped(_ sender: Any) {
+        
+        performSegue(withIdentifier: "addSegue", sender: nil)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
+        if segue.identifier == "addSegue" {
+            let nextVC = segue.destination as! AddTaskViewController
+            nextVC.previousVC = self
+        }
+        if segue.identifier == "completeTaskSegue" {
+            let nextVC = segue.destination as! CompleteTaskViewController
+            nextVC.previousVC = self
+            nextVC.task = sender as! Task
+        }
+    }
 }
